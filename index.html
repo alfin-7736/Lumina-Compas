@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumina Compass - AI Travel Planner</title>
+    
+    <!-- Google Site Verification -->
+    <meta name="google-site-verification" content="PkLsESWw9oD29qCH_Fj4P9CQFkyM8cnLs_S9KhpGPwk" />
+    
+    <!-- SEO UPGRADE: Title and Description -->
+    <title>Lumina Compass | Your Personal AI Travel Planner</title>
+    <meta name="description" content="Generate personalized travel itineraries in seconds. Lumina Compass is an AI-powered trip planner that finds the best destinations, attractions, and hotels, all with a beautiful, custom-themed interface.">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -392,17 +398,40 @@
         });
 
         // --- AI & Data Fetching ---
-        async function makeGeminiRequest(prompt, schema) {
+        async function makeGeminiRequest(prompt, schema, useGoogleSearch = false) {
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
-            const body = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: schema } };
+            
+            const body = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json", responseSchema: schema }
+            };
+
+            if (useGoogleSearch) {
+                body.tools = [{ "google_search": {} }];
+            }
+
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             if (!response.ok) throw new Error(`API error: ${response.status}`);
+            
             const result = await response.json();
+            
+            if (useGoogleSearch) {
+                // For grounded responses, the text is in a different place
+                const groundedResponse = result.candidates[0];
+                const text = groundedResponse.content.parts[0].text;
+                const sources = groundedResponse.groundingMetadata?.groundingAttributions?.map(attr => ({
+                    title: attr.web.title,
+                    uri: attr.web.uri
+                })) || [];
+                return { text: JSON.parse(text), sources };
+            }
+
             if (!result.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("AI returned empty.");
             let jsonText = result.candidates[0].content.parts[0].text.trim();
             if (jsonText.startsWith("```json")) jsonText = jsonText.substring(7, jsonText.length - 3);
             return JSON.parse(jsonText);
         }
+
 
         async function fetchInitialData(destination) {
             try {
@@ -462,6 +491,13 @@
                     <button id="back-to-dashboard" class="btn-primary text-white py-2 px-4 rounded-lg font-semibold mb-8"><i class="fas fa-arrow-left mr-2"></i> Back to Dashboard</button>
                     <section id="summary-section" class="mb-12"><div id="summary-content"><div class="skeleton h-6 w-full"></div></div></section>
                     
+                    <section id="live-info-section" class="mb-12">
+                        <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Live Destination Insights</h2>
+                        <div id="live-info-content" class="mt-6">
+                            <button id="get-live-info-btn" class="btn-primary text-white py-2 px-6 rounded-lg font-semibold">✨ Get Live Insights via Google Search</button>
+                        </div>
+                    </section>
+
                     <section id="accommodation-section" class="mb-12">
                         <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Accommodation & Dining</h2>
                         <div id="accommodation-content" class="mt-6">
@@ -480,13 +516,13 @@
                 </div>`;
             document.getElementById('back-to-dashboard').addEventListener('click', resetToDashboard);
             document.getElementById('find-hotels-btn').addEventListener('click', handleFindHotels);
+            document.getElementById('get-live-info-btn').addEventListener('click', handleFetchLiveInfo);
         }
 
         async function populateResultsAndGetData() {
             const fullPrompt = tripDetails.originalPrompt;
             const dataToSave = { ...tripDetails };
 
-            // --- All AI requests now run in parallel ---
             const summaryPromise = makeGeminiRequest(`Generate a short, exciting 2-3 sentence summary for: "${fullPrompt}"`, { type: "OBJECT", properties: { summary: { type: "STRING" } } }).then(data => {
                 document.querySelector('#summary-content').innerHTML = `<p class="mt-4 text-lg text-gray-300">${data.summary}</p>`;
                 dataToSave.summary = data.summary;
@@ -494,30 +530,16 @@
             
             const attractionsPromise = makeGeminiRequest(`Generate a list of 4 top attractions for: "${fullPrompt}"`, { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } } });
             
-            // MODIFIED: Fetch specific images for each attraction
             const attractionsAndImagesPromise = attractionsPromise.then(async (attractions) => {
                 const imagePromises = attractions.map(item => fetchDestinationImages(`${item.name} ${tripDetails.destination}`, 1));
                 const fetchedImages = await Promise.all(imagePromises);
                 
-                attractions.forEach((item, index) => {
-                    item.imageUrl = fetchedImages[index][0].url; // Assign specific image
-                });
-
+                attractions.forEach((item, index) => { item.imageUrl = fetchedImages[index][0].url; });
                 dataToSave.attractions = attractions;
-                 // Use the main trip image array for the dashboard card
                 dataToSave.images = tripDetails.images;
 
-                document.querySelector('#attractions-content').innerHTML = attractions.map(item => `
-                    <div class="bg-gray-800 rounded-lg overflow-hidden">
-                        <img src="${item.imageUrl}" alt="${item.name}" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold">${item.name}</h3>
-                            <p class="mt-2 text-gray-400">${item.description}</p>
-                        </div>
-                    </div>
-                `).join('');
+                document.querySelector('#attractions-content').innerHTML = attractions.map(item => `<div class="bg-gray-800 rounded-lg overflow-hidden"><img src="${item.imageUrl}" class="w-full h-48 object-cover"><div class="p-6"><h3 class="text-xl font-bold">${item.name}</h3><p class="mt-2 text-gray-400">${item.description}</p></div></div>`).join('');
             });
-
 
             const itineraryPromise = makeGeminiRequest(`Generate a detailed day-by-day itinerary for: "${fullPrompt}". Include a creative title.`, { type: "OBJECT", properties: { title: { type: "STRING" }, schedule: { type: "ARRAY", items: { type: "OBJECT", properties: { time: { type: "STRING" }, activity: { type: "STRING" }, details: { type: "STRING" } } } } } }).then(data => {
                 document.querySelector('.results-header .skeleton').outerHTML = `<p class="text-xl mt-2 text-gray-300">${data.title}</p>`;
@@ -535,6 +557,10 @@
             if (trip.accommodation) {
                 accommodationHTML = renderAccommodation(trip.accommodation);
             }
+            let liveInfoHTML = `<button id="get-live-info-btn" class="btn-primary text-white py-2 px-6 rounded-lg font-semibold">✨ Get Live Insights via Google Search</button>`;
+            if (trip.liveInfo) {
+                liveInfoHTML = renderLiveInfo(trip.liveInfo);
+            }
 
             dom.resultsScreen.innerHTML = `
                  <header class="results-header bg-cover bg-center" style="background-image: url('${trip.images[0].url}')">
@@ -547,6 +573,11 @@
                     <button id="back-to-dashboard" class="btn-primary text-white py-2 px-4 rounded-lg font-semibold mb-8"><i class="fas fa-arrow-left mr-2"></i> Back to Dashboard</button>
                     <section class="mb-12"><p class="mt-4 text-lg text-gray-300">${trip.summary}</p></section>
                     
+                    <section id="live-info-section" class="mb-12">
+                        <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Live Destination Insights</h2>
+                        <div id="live-info-content" class="mt-6">${liveInfoHTML}</div>
+                    </section>
+
                     <section id="accommodation-section" class="mb-12">
                         <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Accommodation & Dining</h2>
                         <div id="accommodation-content" class="mt-6">${accommodationHTML}</div>
@@ -565,6 +596,9 @@
             document.getElementById('back-to-dashboard').addEventListener('click', resetToDashboard);
             if (!trip.accommodation) {
                  document.getElementById('find-hotels-btn').addEventListener('click', () => handleFindHotels(trip.id));
+            }
+             if (!trip.liveInfo) {
+                document.getElementById('get-live-info-btn').addEventListener('click', () => handleFetchLiveInfo(trip.id));
             }
         }
 
@@ -588,13 +622,30 @@
             try {
                 const data = await makeGeminiRequest(prompt, schema);
                 contentDiv.innerHTML = renderAccommodation(data);
-                
-                // Save to Firestore
                 const tripRef = doc(db, "trips", tripId);
                 await updateDoc(tripRef, { accommodation: data });
 
+            } catch(e) { contentDiv.innerHTML = `<p class="text-red-400">Could not find recommendations.</p>`; }
+        }
+
+        async function handleFetchLiveInfo(tripId) {
+            const btn = document.getElementById('get-live-info-btn');
+            const contentDiv = document.getElementById('live-info-content');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Searching...`;
+
+            const trip = allUserTrips.find(t => t.id === tripId) || tripDetails;
+            const schema = { type: "OBJECT", properties: { summary: { type: "STRING" }, official_link: { type: "STRING" } } };
+            const prompt = `Using Google Search, find the latest news, current events, or any important alerts for tourists visiting ${trip.destination} right now. Also find the link to the official tourism website. Summarize the key findings in a brief paragraph.`;
+
+            try {
+                const data = await makeGeminiRequest(prompt, schema, true);
+                contentDiv.innerHTML = renderLiveInfo(data);
+                const tripRef = doc(db, "trips", tripId);
+                await updateDoc(tripRef, { liveInfo: data });
             } catch(e) {
-                contentDiv.innerHTML = `<p class="text-red-400">Could not find recommendations. Please try again later.</p>`;
+                console.error(e);
+                contentDiv.innerHTML = `<p class="text-red-400">Could not fetch live info.</p>`;
             }
         }
         
@@ -604,36 +655,32 @@
                     <div>
                         <h3 class="text-2xl font-bold mb-4">🏨 Hotels</h3>
                         <div class="space-y-4">
-                        ${data.hotels.map(h => `
-                            <div class="bg-gray-800 p-4 rounded-lg">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h4 class="font-bold">${h.name} <span class="text-xs font-light bg-gray-700 px-2 py-1 rounded-full">${h.category}</span></h4>
-                                        <p class="text-sm text-gray-400 mt-1">${h.description}</p>
-                                    </div>
-                                    <span class="font-semibold text-lg text-blue-400">${h.price}</span>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${data.hotels.map(h => `<div class="bg-gray-800 p-4 rounded-lg"><div class="flex justify-between items-start"><div><h4 class="font-bold">${h.name} <span class="text-xs font-light bg-gray-700 px-2 py-1 rounded-full">${h.category}</span></h4><p class="text-sm text-gray-400 mt-1">${h.description}</p></div><span class="font-semibold text-lg text-blue-400 ml-2">${h.price}</span></div></div>`).join('')}
                         </div>
                     </div>
                      <div>
                         <h3 class="text-2xl font-bold mb-4">🍽️ Restaurants</h3>
                         <div class="space-y-4">
-                        ${data.restaurants.map(r => `
-                            <div class="bg-gray-800 p-4 rounded-lg">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h4 class="font-bold">${r.name} <span class="text-xs font-light bg-gray-700 px-2 py-1 rounded-full">${r.category}</span></h4>
-                                        <p class="text-sm text-gray-400 mt-1">${r.description}</p>
-                                    </div>
-                                    <span class="font-semibold text-lg text-blue-400">${r.price}</span>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${data.restaurants.map(r => `<div class="bg-gray-800 p-4 rounded-lg"><div class="flex justify-between items-start"><div><h4 class="font-bold">${r.name} <span class="text-xs font-light bg-gray-700 px-2 py-1 rounded-full">${r.category}</span></h4><p class="text-sm text-gray-400 mt-1">${r.description}</p></div><span class="font-semibold text-lg text-blue-400 ml-2">${r.price}</span></div></div>`).join('')}
                         </div>
                     </div>
                 </div>`;
+        }
+        
+        function renderLiveInfo(data) {
+            const { text, sources } = data;
+            return `
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <p class="text-gray-300">${text.summary}</p>
+                    <div class="mt-4">
+                        <h4 class="font-bold text-sm mb-2">Sources:</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${sources.map(s => `<a href="${s.uri}" target="_blank" rel="noopener noreferrer" class="text-xs bg-gray-700 hover:bg-gray-600 text-white py-1 px-3 rounded-full transition-colors">${s.title}</a>`).join('')}
+                             <a href="${text.official_link}" target="_blank" rel="noopener noreferrer" class="text-xs bg-blue-600 hover:bg-blue-500 text-white py-1 px-3 rounded-full transition-colors">Official Tourism Site</a>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
         
         function applyTheme(theme) {
