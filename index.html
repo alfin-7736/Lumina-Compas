@@ -486,19 +486,38 @@
             const fullPrompt = tripDetails.originalPrompt;
             const dataToSave = { ...tripDetails };
 
+            // --- All AI requests now run in parallel ---
             const summaryPromise = makeGeminiRequest(`Generate a short, exciting 2-3 sentence summary for: "${fullPrompt}"`, { type: "OBJECT", properties: { summary: { type: "STRING" } } }).then(data => {
                 document.querySelector('#summary-content').innerHTML = `<p class="mt-4 text-lg text-gray-300">${data.summary}</p>`;
                 dataToSave.summary = data.summary;
             });
             
             const attractionsPromise = makeGeminiRequest(`Generate a list of 4 top attractions for: "${fullPrompt}"`, { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } } });
-            const imagesPromise = fetchDestinationImages(tripDetails.destination, 5);
-            const attractionsAndImagesPromise = Promise.all([attractionsPromise, imagesPromise]).then(([attractions, images]) => {
-                tripDetails.images.push(...images);
-                dataToSave.images = tripDetails.images;
+            
+            // MODIFIED: Fetch specific images for each attraction
+            const attractionsAndImagesPromise = attractionsPromise.then(async (attractions) => {
+                const imagePromises = attractions.map(item => fetchDestinationImages(`${item.name} ${tripDetails.destination}`, 1));
+                const fetchedImages = await Promise.all(imagePromises);
+                
+                attractions.forEach((item, index) => {
+                    item.imageUrl = fetchedImages[index][0].url; // Assign specific image
+                });
+
                 dataToSave.attractions = attractions;
-                document.querySelector('#attractions-content').innerHTML = attractions.map((item, index) => `<div class="bg-gray-800 rounded-lg overflow-hidden"><img src="${tripDetails.images[index + 1]?.url}" class="w-full h-48 object-cover"><div class="p-6"><h3 class="text-xl font-bold">${item.name}</h3><p class="mt-2 text-gray-400">${item.description}</p></div></div>`).join('');
+                 // Use the main trip image array for the dashboard card
+                dataToSave.images = tripDetails.images;
+
+                document.querySelector('#attractions-content').innerHTML = attractions.map(item => `
+                    <div class="bg-gray-800 rounded-lg overflow-hidden">
+                        <img src="${item.imageUrl}" alt="${item.name}" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold">${item.name}</h3>
+                            <p class="mt-2 text-gray-400">${item.description}</p>
+                        </div>
+                    </div>
+                `).join('');
             });
+
 
             const itineraryPromise = makeGeminiRequest(`Generate a detailed day-by-day itinerary for: "${fullPrompt}". Include a creative title.`, { type: "OBJECT", properties: { title: { type: "STRING" }, schedule: { type: "ARRAY", items: { type: "OBJECT", properties: { time: { type: "STRING" }, activity: { type: "STRING" }, details: { type: "STRING" } } } } } }).then(data => {
                 document.querySelector('.results-header .skeleton').outerHTML = `<p class="text-xl mt-2 text-gray-300">${data.title}</p>`;
@@ -535,7 +554,7 @@
 
                     <section class="mb-12">
                          <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Top Attractions</h2>
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">${trip.attractions.map((item, index) => `<div class="bg-gray-800 rounded-lg overflow-hidden"><img src="${trip.images[index + 1]?.url}" class="w-full h-48 object-cover"><div class="p-6"><h3 class="text-xl font-bold">${item.name}</h3><p class="mt-2 text-gray-400">${item.description}</p></div></div>`).join('')}</div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">${trip.attractions.map((item) => `<div class="bg-gray-800 rounded-lg overflow-hidden"><img src="${item.imageUrl}" class="w-full h-48 object-cover"><div class="p-6"><h3 class="text-xl font-bold">${item.name}</h3><p class="mt-2 text-gray-400">${item.description}</p></div></div>`).join('')}</div>
                     </section>
                     <section class="mb-12">
                         <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Your Itinerary</h2>
