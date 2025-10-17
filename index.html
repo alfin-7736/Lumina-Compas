@@ -11,6 +11,9 @@
     <title>Lumina Compass | Your Personal AI Travel Planner</title>
     <meta name="description" content="Generate personalized travel itineraries in seconds. Lumina Compass is an AI-powered trip planner that finds the best destinations, attractions, and hotels, all with a beautiful, custom-themed interface.">
 
+    <!-- UPDATED: Favicon inspired by your logo -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0a0a'/%3E%3Ctext x='28' y='75' font-family='Poppins, sans-serif' font-size='80' font-weight='700' fill='white'%3EL%3C/text%3E%3Ccircle cx='78' cy='70' r='8' fill='%23007BFF' /%3E%3C/svg%3E">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -803,6 +806,49 @@
             dom.resultsScreen.style.display = 'none';
             dom.dashboardScreen.style.display = 'block';
         }
+
+        dom.cancelShareBtn.addEventListener('click', () => {
+            dom.shareModal.style.display = 'none';
+            dom.shareFeedback.textContent = '';
+            dom.shareEmailInput.value = '';
+        });
+
+        dom.shareForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = dom.shareEmailInput.value.trim();
+            if (!email || !currentTripIdToShare) return;
+
+            dom.shareFeedback.textContent = 'Sharing...';
+            dom.shareFeedback.className = 'text-sm h-4 mt-2 text-yellow-400';
+
+            try {
+                // Find user by email
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    throw new Error("User not found.");
+                }
+
+                const userToShareWith = querySnapshot.docs[0];
+                const userIdToShare = userToShareWith.id;
+
+                // Update the trip document
+                const tripRef = doc(db, "trips", currentTripIdToShare);
+                await updateDoc(tripRef, {
+                    sharedWith: arrayUnion(userIdToShare)
+                });
+                
+                dom.shareFeedback.className = 'text-sm h-4 mt-2 text-green-400';
+                dom.shareFeedback.textContent = 'Trip shared successfully!';
+                setTimeout(() => dom.cancelShareBtn.click(), 2000);
+
+            } catch (error) {
+                 dom.shareFeedback.className = 'text-sm h-4 mt-2 text-red-400';
+                 dom.shareFeedback.textContent = error.message;
+            }
+        });
 
     </script>
 
