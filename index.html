@@ -3,16 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Google Site Verification -->
-    <meta name="google-site-verification" content="PkLsESWw9oD29qCH_Fj4P9CQFkyM8cnLs_S9KhpGPwk" />
-    
-    <!-- SEO UPGRADE: Title and Description -->
-    <title>Lumina Compass | Your Personal AI Travel Planner</title>
-    <meta name="description" content="Generate personalized travel itineraries in seconds. Lumina Compass is an AI-powered trip planner that finds the best destinations, attractions, and hotels, all with a beautiful, custom-themed interface.">
-
-    <!-- UPDATED: Favicon from your GitHub URL -->
-    <link rel="icon" href="https://raw.githubusercontent.com/alfin-7736/Lumina-Compas/6f60b90340697b796accdf20cc4b1f7059c93c27/Screenshot%202025-09-28%20121335.png">
+    <title>Under Construction</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,860 +11,204 @@
     <!-- Google Fonts: Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Icons Library -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
-    <!-- Leaflet CSS for Interactive Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --primary-color: #007BFF;
-            --secondary-color: #0056b3;
-            --theme-font: 'Poppins', sans-serif;
-        }
-
+        /* Main Page Styles */
         body {
-            font-family: var(--theme-font);
+            font-family: 'Poppins', sans-serif;
             background-color: #0a0a0a;
-            color: #fff;
-            overflow: hidden;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden; /* Hide scrollbars from animation */
+            position: relative; /* Needed for background canvas */
         }
 
-        #app-wrapper {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        .background-image {
-            position: absolute;
+        /* NEW: Animated Particle Background */
+        #particle-bg {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            z-index: 1;
+            z-index: 0;
             opacity: 0.3;
-            transition: opacity 1s ease-in-out;
-        }
-        
-        .background-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 1));
-            z-index: 2;
         }
 
-        .content-container, #dashboard-screen {
+        /* Ensure content is above the glow */
+        main, footer {
             position: relative;
-            z-index: 3;
+            z-index: 1;
+        }
+
+        .accent-blue {
+            color: #007BFF;
+        }
+
+        /* NEW: Keyframes for SVG gears */
+        .gear-1 {
+            animation: spin 8s linear infinite;
+            transform-origin: center;
+        }
+        .gear-2 {
+            animation: spin-reverse 8s linear infinite;
+            transform-origin: center;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes spin-reverse {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+
+        /* Footer Logo Snippet Styles */
+        .lumina-power-footer {
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            height: 100%;
-            padding: 1.5rem; /* Adjusted padding for mobile */
-            transition: all 0.5s ease-in-out;
+            align-items: center;
+            gap: 0.5rem; /* 8px */
+            text-decoration: none;
+            margin-top: 2rem; /* 32px */
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
         }
-
-        .logo .brand { font-size: 2rem; font-weight: 700; }
-        .logo .brand span { color: var(--primary-color); }
-        .logo .tagline { font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; color: #9ca3af; }
-        
-        .form-input {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-        .form-input:focus {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
-            outline: none;
-        }
-        
-        #auth-screen, #planner-screen, #refinement-screen, #results-screen, #dashboard-screen, #share-modal { display: none; }
-        
-        #results-screen, #dashboard-screen { background: #111; }
-        
-        .results-header {
-            height: 50vh;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 1.5rem;
-        }
-
-        .results-header::after {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to top, rgba(17, 17, 17, 1) 10%, rgba(17, 17, 17, 0));
-        }
-
-        .btn-primary { background-color: var(--primary-color); transition: background-color 0.3s ease; }
-        .btn-primary:hover { background-color: var(--secondary-color); }
-        .btn-secondary { background-color: #4a5568; transition: background-color 0.3s ease; }
-        .btn-secondary:hover { background-color: #2d3748; }
-
-        .skeleton { background-color: #2d3748; border-radius: 0.5rem; position: relative; overflow: hidden; }
-        .skeleton::before {
-            content: ''; position: absolute; top: 0; left: -150%; width: 150%; height: 100%;
-            background: linear-gradient(to right, transparent 0%, #4a5568 50%, transparent 100%);
-            animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer { 100% { left: 150%; } }
-
-        .scrollable-content::-webkit-scrollbar { width: 8px; }
-        .scrollable-content::-webkit-scrollbar-track { background: #2d3748; }
-        .scrollable-content::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
-        .scrollable-content::-webkit-scrollbar-thumb:hover { background: #718096; }
-
-        #splash-screen { animation: fadeOut 1s ease-in-out 3s forwards; }
-        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-
-        /* Leaflet Map Styles */
-        #map {
-            height: 400px;
-            border-radius: 0.5rem;
-            z-index: 10;
-        }
-        .leaflet-control-attribution, .leaflet-control-zoom {
-            background: rgba(0,0,0,0.5) !important;
-            color: white !important;
-        }
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-            background: #2d3748 !important;
-            color: white !important;
-        }
-
-        @media (min-width: 768px) {
-             .content-container, #dashboard-screen {
-                padding: 2rem;
-            }
-            .results-header {
-                padding: 2rem;
-            }
-        }
-
+        .lumina-power-footer:hover { opacity: 1; }
+        .lumina-power-text { font-size: 0.75rem; font-weight: 400; color: #9ca3af; }
+        .lumina-logo-container { line-height: 1.2; text-align: left; }
+        .lumina-logo-text { font-size: 1rem; font-weight: 700; color: #e0e0e0; letter-spacing: 0.05em; }
+        .lumina-logo-text .accent { color: #007BFF; }
+        .lumina-logo-tagline { font-size: 0.5rem; font-weight: 400; color: #9ca3af; letter-spacing: 0.2em; text-transform: uppercase; }
     </style>
 </head>
-<body>
+<body class="flex flex-col">
 
-    <div id="app-wrapper">
-        <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-black flex flex-col justify-center items-center z-50">
-            <div class="logo">
-                <div class="brand animate-pulse">LUMINA<span>.</span></div>
-                <div class="tagline">COMPASS</div>
-            </div>
-        </div>
+    <!-- NEW: Animated Particle Background Canvas -->
+    <canvas id="particle-bg"></canvas>
 
-        <img id="bg-image" src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop" class="background-image" alt="Beautiful travel destination">
-        <div class="background-overlay"></div>
-
-        <div id="main-content-container" class="content-container">
-            <div id="auth-screen" class="w-full max-w-sm text-center">
-                 <div class="logo mb-8">
-                    <div class="brand">LUMINA<span>.</span></div>
-                    <div class="tagline">COMPASS</div>
-                </div>
-                <h2 id="auth-title" class="text-2xl font-bold mb-6">Sign In to Continue</h2>
-                <form id="auth-form" class="space-y-4">
-                    <input id="email-input" type="email" placeholder="Email" class="w-full px-4 py-3 rounded-lg form-input" required>
-                    <input id="password-input" type="password" placeholder="Password (min. 6 characters)" class="w-full px-4 py-3 rounded-lg form-input" required>
-                    <button id="auth-button" type="submit" class="w-full btn-primary py-3 rounded-lg font-semibold">Sign In</button>
-                </form>
-                <p id="auth-error" class="text-red-400 mt-4 text-sm h-4"></p>
-                <div class="mt-4 text-sm">
-                    <p id="auth-toggle-text" class="text-gray-400">
-                        Don't have an account? <button id="auth-toggle-btn" class="font-semibold text-white hover:underline">Sign Up</button>
-                    </p>
-                </div>
-            </div>
-
-            <div id="planner-screen" class="w-full max-w-2xl text-center">
-                <h1 class="text-3xl md:text-5xl font-bold mb-4">Let's plan your next adventure.</h1>
-                <p class="text-base md:text-lg text-gray-300 mb-8">Start by telling us your dream destination.</p>
-                <form id="planner-form" class="flex items-center w-full">
-                    <input id="prompt-input" type="text" placeholder="e.g., Munnar, Udaipur, Goa" class="form-input w-full px-6 py-4 rounded-l-lg text-lg text-white">
-                    <button type="submit" class="btn-primary px-6 md:px-8 py-4 rounded-r-lg font-semibold text-lg">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                </form>
-                <p id="planner-error" class="text-red-400 mt-4 text-sm h-4"></p>
-                 <button id="back-to-dashboard-from-planner" class="text-gray-400 hover:text-white transition-colors text-sm mt-8">Back to Dashboard</button>
-            </div>
-
-            <div id="refinement-screen" class="w-full max-w-2xl text-center">
-                <h1 id="refinement-title" class="text-3xl md:text-5xl font-bold mb-4">Great choice!</h1>
-                <p class="text-base md:text-lg text-gray-300 mb-8">Just a few more details to create your perfect trip.</p>
-                <form id="refinement-form" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                    <input id="days-input" type="number" placeholder="Days of stay (e.g., 5)" class="form-input w-full px-6 py-4 rounded-lg text-lg text-white" required>
-                    <input id="people-input" type="text" placeholder="Who is traveling? (e.g., Family with kids)" class="form-input w-full px-6 py-4 rounded-lg text-lg text-white" required>
-                    <button type="submit" class="md:col-span-2 w-full btn-primary py-4 rounded-lg font-semibold text-lg">✨ Generate Itinerary</button>
-                </form>
-            </div>
-        </div>
-
-        <div id="dashboard-screen" class="w-full h-full absolute top-0 left-0 z-20 overflow-y-auto scrollable-content">
-             <div class="w-full max-w-6xl mx-auto p-6 md:p-12">
-                <div class="flex flex-col md:flex-row justify-between md:items-center">
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-bold">Your Dashboard</h1>
-                        <p id="location-info" class="text-gray-400 text-sm mt-1">Fetching location...</p>
-                    </div>
-                    <button id="signout-btn" class="text-gray-400 hover:text-white transition-colors text-sm mt-4 md:mt-0">Sign Out</button>
-                </div>
-                <button id="plan-new-trip-btn" class="w-full md:w-auto btn-primary px-6 py-3 rounded-lg font-semibold text-lg mt-8">
-                    <i class="fas fa-plus mr-2"></i> Plan a New Trip
-                </button>
-                
-                <h2 class="text-2xl font-bold mt-12 border-l-4 border-blue-500 pl-4">My Trips</h2>
-                <div id="trips-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-6"></div>
-
-                <h2 class="text-2xl font-bold mt-12 border-l-4 border-blue-500 pl-4">Shared With Me</h2>
-                <div id="shared-trips-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-6"></div>
-
-                <h2 class="text-2xl font-bold mt-12 border-l-4 border-blue-500 pl-4">Nearby Getaways</h2>
-                <div id="nearby-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-6"></div>
-             </div>
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col justify-center items-center text-center p-6">
+        <div class="mb-8">
+            <!-- NEW: Custom SVG Gear Animation -->
+            <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="text-blue-600" fill="currentColor">
+                <g class="gear-1">
+                    <path d="M 50.000 36.341 A 3.659 3.659 0 0 0 50.000 29.023 A 3.659 3.659 0 0 0 50.000 36.341 M 37.893 39.923 A 3.659 3.659 0 0 0 34.312 33.763 A 3.659 3.659 0 0 0 31.731 39.923 M 31.731 60.077 A 3.659 3.659 0 0 0 34.312 66.237 A 3.659 3.659 0 0 0 37.893 60.077 M 50.000 63.659 A 3.659 3.659 0 0 0 50.000 70.977 A 3.659 3.659 0 0 0 50.000 63.659 M 62.107 60.077 A 3.659 3.659 0 0 0 65.688 66.237 A 3.659 3.659 0 0 0 68.269 60.077 M 68.269 39.923 A 3.659 3.659 0 0 0 65.688 33.763 A 3.659 3.659 0 0 0 62.107 39.923 M 50.000 25.000 A 25.000 25.000 0 1 0 50.000 75.000 A 25.000 25.000 0 1 0 50.000 25.000 M 50.000 32.682 A 17.318 17.318 0 1 1 50.000 67.318 A 17.318 17.318 0 1 1 50.000 32.682 M 50.000 40.909 A 9.091 9.091 0 1 0 50.000 59.091 A 9.091 9.091 0 1 0 50.000 40.909"/>
+                </g>
+                <g class="gear-2" style="transform: translate(30px, -30px) scale(0.6);">
+                    <path d="M 50.000 36.341 A 3.659 3.659 0 0 0 50.000 29.023 A 3.659 3.659 0 0 0 50.000 36.341 M 37.893 39.923 A 3.659 3.659 0 0 0 34.312 33.763 A 3.659 3.659 0 0 0 31.731 39.923 M 31.731 60.077 A 3.659 3.659 0 0 0 34.312 66.237 A 3.659 3.659 0 0 0 37.893 60.077 M 50.000 63.659 A 3.659 3.659 0 0 0 50.000 70.977 A 3.659 3.659 0 0 0 50.000 63.659 M 62.107 60.077 A 3.659 3.659 0 0 0 65.688 66.237 A 3.659 3.659 0 0 0 68.269 60.077 M 68.269 39.923 A 3.659 3.659 0 0 0 65.688 33.763 A 3.659 3.659 0 0 0 62.107 39.923 M 50.000 25.000 A 25.000 25.000 0 1 0 50.000 75.000 A 25.000 25.000 0 1 0 50.000 25.000 M 50.000 32.682 A 17.318 17.318 0 1 1 50.000 67.318 A 17.318 17.318 0 1 1 50.000 32.682 M 50.000 40.909 A 9.091 9.091 0 1 0 50.000 59.091 A 9.091 9.091 0 1 0 50.000 40.909"/>
+                </g>
+            </svg>
         </div>
         
-        <div id="results-screen" class="w-full h-full overflow-y-auto absolute top-0 left-0 z-30 scrollable-content"></div>
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+            Our Site is Getting an Upgrade
+        </h1>
         
-        <div id="share-modal" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex justify-center items-center z-40">
-            <div class="bg-gray-800 p-8 rounded-lg w-full max-w-md m-4">
-                <h2 class="text-2xl font-bold mb-4">Share This Trip</h2>
-                <p class="text-gray-400 mb-6">Enter the email of the Lumina Compass user you want to share this trip with.</p>
-                <form id="share-form">
-                    <input id="share-email-input" type="email" placeholder="friend@example.com" class="form-input w-full p-3 rounded-lg" required>
-                    <p id="share-feedback" class="text-sm h-4 mt-2"></p>
-                    <div class="flex justify-end gap-4 mt-6">
-                        <button type="button" id="cancel-share-btn" class="btn-secondary px-6 py-2 rounded-lg">Cancel</button>
-                        <button type="submit" id="submit-share-btn" class="btn-primary px-6 py-2 rounded-lg">Share</button>
-                    </div>
-                </form>
-            </div>
+        <p class="text-lg md:text-xl text-gray-400 max-w-2xl mb-8">
+            We are working hard to bring you a new and improved experience. We will be back online shortly!
+        </p>
+        
+        <div class="text-gray-300">
+            <p class="font-semibold">Need to get in touch?</p>
+            <p>Email us at: 
+                <a href="mailto:luminawebsolutions@gmail.com" class="font-bold accent-blue hover:underline">
+                    luminawebsolutions@gmail.com
+                </a>
+            </p>
         </div>
+    </main>
 
-    </div>
-
-    <!-- Leaflet JS for Interactive Map -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
-        import { getFirestore, addDoc, collection, query, where, onSnapshot, doc, updateDoc, arrayUnion, deleteDoc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDye2ZMJOstA80slJc2V8wNdCcMtFCnRDM",
-            authDomain: "lumina-planner.firebaseapp.com",
-            projectId: "lumina-planner",
-            storageBucket: "lumina-planner.firebasestorage.app",
-            messagingSenderId: "281928148765",
-            appId: "1:281928148765:web:81699f1c9502141db563f4"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        const GEMINI_API_KEY = "AIzaSyDpNR5Hm0geUhq79CbULq1tY9hW4X3vaqY";
-        const UNSPLASH_ACCESS_KEY = "SRO0Hv3fESdS60QiyUX8f2oUuVH-uW8SsVD6hidwR0Y";
-
-        const dom = {
-            splashScreen: document.getElementById('splash-screen'),
-            dashboardScreen: document.getElementById('dashboard-screen'),
-            tripsGrid: document.getElementById('trips-grid'),
-            sharedTripsGrid: document.getElementById('shared-trips-grid'),
-            nearbyGrid: document.getElementById('nearby-grid'),
-            planNewTripBtn: document.getElementById('plan-new-trip-btn'),
-            bgImage: document.getElementById('bg-image'),
-            authScreen: document.getElementById('auth-screen'),
-            plannerScreen: document.getElementById('planner-screen'),
-            refinementScreen: document.getElementById('refinement-screen'),
-            resultsScreen: document.getElementById('results-screen'),
-            authForm: document.getElementById('auth-form'),
-            authError: document.getElementById('auth-error'),
-            signoutBtn: document.getElementById('signout-btn'),
-            plannerForm: document.getElementById('planner-form'),
-            promptInput: document.getElementById('prompt-input'),
-            plannerError: document.getElementById('planner-error'),
-            mainContentContainer: document.getElementById('main-content-container'),
-            authTitle: document.getElementById('auth-title'),
-            authButton: document.getElementById('auth-button'),
-            authToggleBtn: document.getElementById('auth-toggle-btn'),
-            refinementTitle: document.getElementById('refinement-title'),
-            refinementForm: document.getElementById('refinement-form'),
-            backToDashboardFromPlanner: document.getElementById('back-to-dashboard-from-planner'),
-            locationInfo: document.getElementById('location-info'),
-            shareModal: document.getElementById('share-modal'),
-            shareForm: document.getElementById('share-form'),
-            shareEmailInput: document.getElementById('share-email-input'),
-            shareFeedback: document.getElementById('share-feedback'),
-            cancelShareBtn: document.getElementById('cancel-share-btn'),
-        };
-        
-        let tripDetails = {};
-        let isLoginMode = true;
-        let allUserTrips = [];
-        let userLocation = { city: "your current location" };
-        let currentTripIdToShare = null;
-        let map;
-
-
-        window.addEventListener('load', () => { setTimeout(() => { dom.splashScreen.style.display = 'none'; }, 3000); });
-
-        // --- Auth & User State ---
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            dom.authError.textContent = '';
-            dom.authTitle.textContent = isLoginMode ? 'Sign In' : 'Create Account';
-            dom.authButton.textContent = isLoginMode ? 'Sign In' : 'Sign Up';
-            const toggleText = isLoginMode ? `Don't have an account? <button id="auth-toggle-btn" class="font-semibold text-white hover:underline">Sign Up</button>` : `Have an account? <button id="auth-toggle-btn" class="font-semibold text-white hover:underline">Sign In</button>`;
-            document.getElementById('auth-toggle-text').innerHTML = toggleText;
-            document.getElementById('auth-toggle-btn').addEventListener('click', toggleAuthMode);
-        }
-        dom.authToggleBtn.addEventListener('click', toggleAuthMode);
-
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                dom.mainContentContainer.style.display = 'none';
-                dom.dashboardScreen.style.display = 'block';
-                fetchUserLocation();
-                fetchAndDisplayTrips(user.uid);
-            } else {
-                dom.dashboardScreen.style.display = 'none';
-                dom.resultsScreen.style.display = 'none';
-                dom.mainContentContainer.style.display = 'flex';
-                dom.refinementScreen.style.display = 'none';
-                dom.plannerScreen.style.display = 'none';
-                dom.authScreen.style.display = 'block';
-            }
-        });
-
-        dom.authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email-input').value;
-            const password = document.getElementById('password-input').value;
-            dom.authError.textContent = '';
-            
-            if (isLoginMode) {
-                signInWithEmailAndPassword(auth, email, password).catch(err => dom.authError.textContent = 'Invalid details.');
-            } else {
-                try {
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, "users", userCredential.user.uid), {
-                        email: userCredential.user.email
-                    });
-                } catch (error) {
-                    dom.authError.textContent = 'Could not create account.';
-                }
-            }
-        });
-        dom.signoutBtn.addEventListener('click', () => signOut(auth));
-        
-        async function fetchUserLocation() {
-            if (!navigator.geolocation) return;
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const { latitude, longitude } = pos.coords;
-                const schema = { type: "OBJECT", properties: { city: { type: "STRING" }, country: { type: "STRING" } } };
-                try {
-                    const data = await makeGeminiRequest(`Based on these coordinates (${latitude}, ${longitude}), what is the city and country?`, schema);
-                    userLocation = data;
-                    dom.locationInfo.innerHTML = `<i class="fas fa-map-marker-alt mr-2"></i> ${userLocation.city}, ${userLocation.country}`;
-                    generateNearbySuggestions();
-                } catch { dom.locationInfo.textContent = 'Could not determine location.'; }
-            }, () => dom.locationInfo.textContent = 'Location access denied.');
-        }
-
-        // --- Dashboard & Navigation ---
-        dom.planNewTripBtn.addEventListener('click', () => {
-            dom.dashboardScreen.style.display = 'none';
-            dom.mainContentContainer.style.display = 'flex';
-            dom.plannerScreen.style.display = 'block';
-        });
-        dom.backToDashboardFromPlanner.addEventListener('click', () => {
-            dom.mainContentContainer.style.display = 'none';
-            dom.dashboardScreen.style.display = 'block';
-        });
-
-        function fetchAndDisplayTrips(userId) {
-            const myTripsQuery = query(collection(db, "trips"), where("userId", "==", userId));
-            const sharedTripsQuery = query(collection(db, "trips"), where("sharedWith", "array-contains", userId));
-
-            onSnapshot(myTripsQuery, (snapshot) => {
-                const myTrips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                allUserTrips = [...myTrips, ...allUserTrips.filter(t => t.userId !== userId)];
-                renderDashboard(myTrips, dom.tripsGrid, true);
-            });
-
-            onSnapshot(sharedTripsQuery, (snapshot) => {
-                const sharedTrips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                 allUserTrips = [...allUserTrips.filter(t => t.userId === userId || !myTrips.find(mt => mt.id === t.id)), ...sharedTrips];
-                renderDashboard(sharedTrips, dom.sharedTripsGrid, false);
-            });
-        }
-        function renderDashboard(trips, gridElement, canDelete) {
-            if (trips.length === 0) {
-                gridElement.innerHTML = `<p class="text-gray-400 col-span-full text-center">No trips here yet.</p>`;
-                return;
-            }
-            gridElement.innerHTML = trips.map(trip => `
-                <div class="trip-card bg-gray-800 rounded-lg overflow-hidden transform hover:scale-105 transition-transform relative" data-trip-id="${trip.id}">
-                    ${canDelete ? `<button class="delete-trip-btn absolute top-2 right-2 bg-red-600 hover:bg-red-700 w-8 h-8 rounded-full z-10 flex items-center justify-center"><i class="fas fa-trash-alt"></i></button>` : ''}
-                    <div class="cursor-pointer">
-                        <img src="${trip.images[0].url}" alt="${trip.destination}" class="w-full h-40 object-cover">
-                        <div class="p-4">
-                            <h3 class="text-xl font-bold">${trip.destination}</h3>
-                            <p class="text-sm text-gray-400">${trip.originalPrompt}</p>
-                        </div>
-                    </div>
-                </div>`).join('');
-        }
-        
-        document.body.addEventListener('click', (e) => {
-            const card = e.target.closest('.trip-card');
-            if (!card) return;
-
-            const tripId = card.dataset.tripId;
-            if (e.target.closest('.delete-trip-btn')) {
-                if (confirm('Are you sure you want to delete this trip?')) {
-                    deleteDoc(doc(db, "trips", tripId));
-                }
-            } else {
-                const selectedTrip = allUserTrips.find(t => t.id === tripId);
-                if (selectedTrip) {
-                    dom.dashboardScreen.style.display = 'none';
-                    dom.resultsScreen.style.display = 'block';
-                    renderSavedTrip(selectedTrip);
-                }
-            }
-        });
-        
-        // --- Planner Logic ---
-        dom.plannerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const destination = dom.promptInput.value.trim();
-            if (!destination) return;
-            tripDetails = { destination };
-            dom.plannerError.textContent = ''; 
-            dom.plannerScreen.style.display = 'none';
-            dom.refinementScreen.style.display = 'block';
-            dom.refinementTitle.textContent = `Great choice! Planning for ${destination}.`;
-            fetchInitialData(destination);
-        });
-
-        dom.refinementForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            tripDetails.days = document.getElementById('days-input').value;
-            tripDetails.travelers = document.getElementById('people-input').value;
-            tripDetails.originalPrompt = `A ${tripDetails.days}-day trip to ${tripDetails.destination} for ${tripDetails.travelers}`;
-            dom.mainContentContainer.style.display = 'none';
-            dom.resultsScreen.style.display = 'block';
-            renderSkeletonResults();
-            const finalTripData = await populateResultsAndGetData();
-            const docRef = await addDoc(collection(db, "trips"), { ...finalTripData, userId: auth.currentUser.uid, sharedWith: [] });
-            tripDetails.id = docRef.id;
-        });
-
-        // --- AI & Data Fetching ---
-        async function makeGeminiRequest(prompt, schema, useGoogleSearch = false) {
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
-            
-            const body = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json", responseSchema: schema }
-            };
-
-            if (useGoogleSearch) {
-                body.tools = [{ "google_search": {} }];
-            }
-
-            const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-            if (!response.ok) throw new Error(`API error: ${response.status}`);
-            
-            const result = await response.json();
-            
-            if (useGoogleSearch) {
-                const groundedResponse = result.candidates[0];
-                const text = groundedResponse.content.parts[0].text;
-                 const sources = groundedResponse.groundingMetadata?.groundingAttributions?.map(attr => ({
-                    title: attr.web.title,
-                    uri: attr.web.uri
-                })) || [];
-                return { text: JSON.parse(text), sources };
-            }
-
-            if (!result.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("AI returned empty.");
-            let jsonText = result.candidates[0].content.parts[0].text.trim();
-            if (jsonText.startsWith("```json")) jsonText = jsonText.substring(7, jsonText.length - 3);
-            return JSON.parse(jsonText);
-        }
-
-
-        async function fetchInitialData(destination) {
-            try {
-                const [theme, images] = await Promise.all([generateTheme(destination), fetchDestinationImages(destination, 1)]);
-                tripDetails.theme = theme;
-                tripDetails.images = images;
-                applyTheme(theme);
-                dom.bgImage.src = images[0].url;
-            } catch (error) {
-                dom.plannerError.textContent = "Could not fetch details.";
-                dom.refinementScreen.style.display = 'none';
-                dom.plannerScreen.style.display = 'block';
-            }
-        }
-        
-        async function generateTheme(destination) {
-            const schema = { type: "OBJECT", properties: { primaryColor: { type: "STRING" }, secondaryColor: { type: "STRING" }, fontFamily: { type: "STRING" } } };
-            const prompt = `Generate a UI theme for a travel app for '${destination}'. Provide hex colors and a Google Font name.`;
-            return makeGeminiRequest(prompt, schema);
-        }
-
-        async function fetchDestinationImages(destination, count) {
-            const response = await fetch(`https://api.unsplash.com/search/photos?query=${destination}&per_page=${count}&orientation=landscape&client_id=${UNSPLASH_ACCESS_KEY}`);
-            const data = await response.json();
-            if (!data.results || data.results.length === 0) return Array(count).fill(null).map(() => ({ url: `https://placehold.co/1200x800/222/FFF?text=${destination}`, alt: 'Image not found' }));
-            return data.results.map(img => ({ url: img.urls.regular, alt: img.alt_description }));
-        }
-
-        async function generateNearbySuggestions() {
-            const schema = { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } } };
-            const prompt = `Suggest 3 interesting nearby tourist getaways from ${userLocation.city}.`;
-            try {
-                const suggestions = await makeGeminiRequest(prompt, schema);
-                const images = await fetchDestinationImages(suggestions.map(s => s.name).join(' '), 3);
-                dom.nearbyGrid.innerHTML = suggestions.map((s, i) => `
-                    <div class="bg-gray-800 rounded-lg overflow-hidden">
-                         <img src="${images[i]?.url}" alt="${s.name}" class="w-full h-40 object-cover">
-                         <div class="p-4">
-                            <h3 class="text-xl font-bold">${s.name}</h3>
-                            <p class="text-sm text-gray-400 mt-1">${s.description}</p>
-                         </div>
-                    </div>`).join('');
-            } catch { dom.nearbyGrid.innerHTML = `<p class="text-gray-400">Could not load suggestions.</p>`; }
-        }
-
-        // --- Rendering Logic ---
-        function renderSkeletonResults() {
-            applyTheme(tripDetails.theme);
-            dom.resultsScreen.innerHTML = `
-                <header class="results-header bg-cover bg-center" style="background-image: url('${tripDetails.images[0].url}')">
-                    <div class="relative z-10">
-                        <h1 class="text-4xl md:text-7xl font-bold">${tripDetails.destination}</h1>
-                        <div class="skeleton h-8 w-3/4 mt-2"></div>
-                    </div>
-                </header>
-                <div class="p-6 md:p-12 max-w-4xl mx-auto w-full">
-                    <div class="flex flex-wrap gap-4 mb-8">
-                        <button id="back-to-dashboard" class="btn-secondary text-white py-2 px-4 rounded-lg font-semibold"><i class="fas fa-arrow-left mr-2"></i> Dashboard</button>
-                        <button id="share-trip-btn" class="btn-primary text-white py-2 px-4 rounded-lg font-semibold"><i class="fas fa-share-alt mr-2"></i> Share Trip</button>
-                    </div>
-                    <section id="summary-section" class="mb-12"><div id="summary-content"><div class="skeleton h-6 w-full"></div></div></section>
-                    
-                    <section id="live-info-section" class="mb-12">
-                        <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Live Destination Insights</h2>
-                        <div id="live-info-content" class="mt-6">
-                            <button id="get-live-info-btn" class="btn-primary text-white py-2 px-6 rounded-lg font-semibold">✨ Get Live Insights via Google Search</button>
-                        </div>
-                    </section>
-
-                    <section id="accommodation-section" class="mb-12">
-                        <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Accommodation & Dining</h2>
-                        <div id="accommodation-content" class="mt-6">
-                            <button id="find-hotels-btn" class="btn-primary text-white py-2 px-6 rounded-lg font-semibold">✨ Find Hotels & Restaurants</button>
-                        </div>
-                    </section>
-
-                    <section id="attractions-section" class="mb-12">
-                         <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Top Attractions</h2>
-                         <div id="attractions-content" class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">${Array(2).fill(0).map(() => `<div class="bg-gray-800 rounded-lg"><div class="skeleton h-48 w-full"></div><div class="p-6"><div class="skeleton h-6 w-3/4"></div></div></div>`).join('')}</div>
-                    </section>
-                    <section id="itinerary-section" class="mb-12">
-                        <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Your Itinerary</h2>
-                        <div id="itinerary-content" class="mt-6 space-y-8 relative border-l-2 border-gray-700 ml-4">${Array(3).fill(0).map(() => `<div class="pl-8"><div class="skeleton h-5 w-1/4 mb-2"></div><div class="skeleton h-6 w-3/4"></div></div>`).join('')}</div>
-                    </section>
-                </div>`;
-            document.getElementById('back-to-dashboard').addEventListener('click', resetToDashboard);
-            document.getElementById('share-trip-btn').addEventListener('click', () => {
-                currentTripIdToShare = tripDetails.id;
-                dom.shareModal.style.display = 'flex';
-            });
-            document.getElementById('find-hotels-btn').addEventListener('click', () => handleFindHotels(tripDetails.id));
-            document.getElementById('get-live-info-btn').addEventListener('click', () => handleFetchLiveInfo(tripDetails.id));
-        }
-
-        async function populateResultsAndGetData() {
-            const fullPrompt = tripDetails.originalPrompt;
-            const dataToSave = { ...tripDetails };
-
-            const summaryPromise = makeGeminiRequest(`Generate a short, exciting 2-3 sentence summary for: "${fullPrompt}"`, { type: "OBJECT", properties: { summary: { type: "STRING" } } }).then(data => {
-                document.querySelector('#summary-content').innerHTML = `<p class="mt-4 text-lg text-gray-300">${data.summary}</p>`;
-                dataToSave.summary = data.summary;
-            });
-            
-            const attractionsPromise = makeGeminiRequest(`Generate a list of 4 top attractions for: "${fullPrompt}"`, { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, description: { type: "STRING" } } } });
-            
-            const attractionsAndImagesPromise = attractionsPromise.then(async (attractions) => {
-                const imagePromises = attractions.map(item => fetchDestinationImages(`${item.name} ${tripDetails.destination}`, 1));
-                const fetchedImages = await Promise.all(imagePromises);
-                
-                attractions.forEach((item, index) => { item.imageUrl = fetchedImages[index][0].url; });
-                dataToSave.attractions = attractions;
-                dataToSave.images = tripDetails.images;
-
-                document.querySelector('#attractions-content').innerHTML = attractions.map(item => `<div class="bg-gray-800 rounded-lg overflow-hidden"><img src="${item.imageUrl}" class="w-full h-48 object-cover"><div class="p-6"><h3 class="text-xl font-bold">${item.name}</h3><p class="mt-2 text-gray-400">${item.description}</p></div></div>`).join('');
-            });
-
-            const itineraryPromise = makeGeminiRequest(`Generate a detailed day-by-day itinerary for: "${fullPrompt}". Include a creative title.`, { type: "OBJECT", properties: { title: { type: "STRING" }, schedule: { type: "ARRAY", items: { type: "OBJECT", properties: { time: { type: "STRING" }, activity: { type: "STRING" }, details: { type: "STRING" } } } } } }).then(data => {
-                document.querySelector('.results-header .skeleton').outerHTML = `<p class="text-xl mt-2 text-gray-300">${data.title}</p>`;
-                dataToSave.itinerary = data;
-                document.querySelector('#itinerary-content').innerHTML = data.schedule.map(item => `<div class="pl-8 relative"><div class="absolute -left-4 top-1 w-6 h-6 rounded-full" style="background-color: var(--primary-color);"></div><p class="font-bold text-lg" style="color: var(--primary-color);">${item.time}</p><h3 class="text-xl font-bold mt-1">${item.activity}</h3><p class="mt-2 text-gray-400">${item.details}</p></div>`).join('');
-            });
-            
-            await Promise.allSettled([summaryPromise, attractionsAndImagesPromise, itineraryPromise]);
-            return dataToSave;
-        }
-
-        function renderSavedTrip(trip) {
-            applyTheme(trip.theme);
-            let accommodationHTML = `<button id="find-hotels-btn" class="btn-primary text-white py-2 px-6 rounded-lg font-semibold">✨ Find Hotels & Restaurants</button>`;
-            if (trip.accommodation) {
-                accommodationHTML = renderAccommodation(trip.accommodation);
-            }
-            let liveInfoHTML = `<button id="get-live-info-btn" class="btn-primary text-white py-2 px-6 rounded-lg font-semibold">✨ Get Live Insights via Google Search</button>`;
-            if (trip.liveInfo) {
-                liveInfoHTML = renderLiveInfo(trip.liveInfo);
-            }
-
-            dom.resultsScreen.innerHTML = `
-                 <header class="results-header bg-cover bg-center" style="background-image: url('${trip.images[0].url}')">
-                    <div class="relative z-10">
-                        <h1 class="text-4xl md:text-7xl font-bold">${trip.destination}</h1>
-                        <p class="text-lg md:text-xl mt-2 text-gray-300">${trip.itinerary.title}</p>
-                    </div>
-                </header>
-                <div class="p-6 md:p-12 max-w-4xl mx-auto w-full">
-                    <div class="flex flex-wrap gap-4 mb-8">
-                        <button id="back-to-dashboard" class="btn-secondary text-white py-2 px-4 rounded-lg font-semibold"><i class="fas fa-arrow-left mr-2"></i> Dashboard</button>
-                        <button id="share-trip-btn" class="btn-primary text-white py-2 px-4 rounded-lg font-semibold"><i class="fas fa-share-alt mr-2"></i> Share Trip</button>
-                    </div>
-                    <section class="mb-12"><p class="mt-4 text-lg text-gray-300">${trip.summary}</p></section>
-                    
-                    <section id="live-info-section" class="mb-12">
-                        <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Live Destination Insights</h2>
-                        <div id="live-info-content" class="mt-6">${liveInfoHTML}</div>
-                    </section>
-
-                    <section id="accommodation-section" class="mb-12">
-                        <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Accommodation & Dining</h2>
-                        <div id="accommodation-content" class="mt-6">${accommodationHTML}</div>
-                    </section>
-
-                    <section class="mb-12">
-                         <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Top Attractions</h2>
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">${trip.attractions.map((item) => `<div class="bg-gray-800 rounded-lg overflow-hidden"><img src="${item.imageUrl}" class="w-full h-48 object-cover"><div class="p-6"><h3 class="text-xl font-bold">${item.name}</h3><p class="mt-2 text-gray-400">${item.description}</p></div></div>`).join('')}</div>
-                    </section>
-                    <section class="mb-12">
-                        <h2 class="text-3xl font-bold border-l-4 pl-4" style="border-color: var(--primary-color);">Your Itinerary</h2>
-                        <div class="mt-6 space-y-8 relative border-l-2 border-gray-700 ml-4">${trip.itinerary.schedule.map(item => `<div class="pl-8 relative"><div class="absolute -left-4 top-1 w-6 h-6 rounded-full" style="background-color: var(--primary-color);"></div><p class="font-bold text-lg" style="color: var(--primary-color);">${item.time}</p><h3 class="text-xl font-bold mt-1">${item.activity}</h3><p class="mt-2 text-gray-400">${item.details}</p></div>`).join('')}</div>
-                    </section>
+    <!-- Footer with Your Logo Snippet -->
+    <footer class="w-full p-8 text-center">
+        <a href="https://luminaweb.vercel.app/" target="_blank" rel="noopener noreferrer" class="lumina-power-footer" title="Powered by Lumina Web Solutions">
+            <span class="lumina-power-text">Powered by</span>
+            <div class="lumina-logo-container">
+                <div class="lumina-logo-text">
+                    <span>LUMINA</span><span class="accent-blue">.</span>
                 </div>
-            `;
-            document.getElementById('back-to-dashboard').addEventListener('click', resetToDashboard);
-            if (!trip.accommodation) {
-                 document.getElementById('find-hotels-btn').addEventListener('click', () => handleFindHotels(trip.id));
-            }
-             if (!trip.liveInfo) {
-                document.getElementById('get-live-info-btn').addEventListener('click', () => handleFetchLiveInfo(trip.id));
-            }
-            document.getElementById('share-trip-btn').addEventListener('click', () => {
-                currentTripIdToShare = trip.id;
-                dom.shareModal.style.display = 'flex';
-             });
-        }
-
-        async function handleFindHotels(tripId) {
-            const btn = document.getElementById('find-hotels-btn');
-            const contentDiv = document.getElementById('accommodation-content');
-            if(!btn || !contentDiv) return;
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Finding...`;
-            
-            const trip = allUserTrips.find(t => t.id === tripId) || tripDetails;
-
-            const schema = {
-                type: "OBJECT",
-                properties: {
-                    hotels: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, category: { type: "STRING" }, price: { type: "STRING" }, description: { type: "STRING" }, link: { type: "STRING" } } } },
-                    restaurants: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, category: { type: "STRING" }, price: { type: "STRING" }, description: { type: "STRING" }, link: { type: "STRING" } } } }
-                }
-            };
-            const prompt = `You are a travel agent. Use Google Search to find top-rated places for a trip to ${trip.destination} for ${trip.travelers}. Suggest 3 hotels (Luxury, Mid-Range, Budget) and 3 restaurants (Fine Dining, Local Cuisine, Casual). For each, provide its name, category, price range (₹, ₹₹, ₹₹₹), a short description, and a direct booking or information link from a major site like Booking.com, TripAdvisor, Agoda, or Zomato.`;
-
-            try {
-                const data = await makeGeminiRequest(prompt, schema, true);
-                contentDiv.innerHTML = renderAccommodation(data.text);
-                const tripRef = doc(db, "trips", tripId);
-                await updateDoc(tripRef, { accommodation: data.text });
-
-            } catch(e) { 
-                console.error(e);
-                contentDiv.innerHTML = `<p class="text-red-400">Could not find recommendations. The AI may be busy. Please try again in a moment.</p>`; 
-            }
-        }
-
-        async function handleFetchLiveInfo(tripId) {
-            const btn = document.getElementById('get-live-info-btn');
-            const contentDiv = document.getElementById('live-info-content');
-            if(!btn || !contentDiv) return;
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Searching...`;
-
-            const trip = allUserTrips.find(t => t.id === tripId) || tripDetails;
-            const schema = { type: "OBJECT", properties: { summary: { type: "STRING" }, official_link: { type: "STRING" } } };
-            const prompt = `Using Google Search, find the latest news, current events, or any important alerts for tourists visiting ${trip.destination} right now. Also find the link to the official tourism website. Summarize the key findings in a brief paragraph.`;
-
-            try {
-                const data = await makeGeminiRequest(prompt, schema, true);
-                contentDiv.innerHTML = renderLiveInfo(data);
-                const tripRef = doc(db, "trips", tripId);
-                await updateDoc(tripRef, { liveInfo: data });
-            } catch(e) {
-                console.error(e);
-                contentDiv.innerHTML = `<p class="text-red-400">Could not fetch live info.</p>`;
-            }
-        }
-        
-        function renderAccommodation(data) {
-             return `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <h3 class="text-2xl font-bold mb-4">🏨 Hotels</h3>
-                        <div class="space-y-4">
-                        ${data.hotels.map(h => `
-                            <div class="bg-gray-800 p-4 rounded-lg flex flex-col justify-between h-full">
-                                <div>
-                                    <div class="flex justify-between items-start">
-                                        <h4 class="font-bold pr-2">${h.name} <span class="text-xs font-light bg-gray-700 px-2 py-1 rounded-full">${h.category}</span></h4>
-                                        <span class="font-semibold text-lg text-blue-400 ml-2 whitespace-nowrap">${h.price}</span>
-                                    </div>
-                                    <p class="text-sm text-gray-400 mt-1">${h.description}</p>
-                                </div>
-                                <a href="${h.link}" target="_blank" rel="noopener noreferrer" class="self-start mt-3 text-sm btn-secondary text-white py-1 px-3 rounded-lg font-semibold">View & Book</a>
-                            </div>
-                        `).join('')}
-                        </div>
-                    </div>
-                     <div>
-                        <h3 class="text-2xl font-bold mb-4">🍽️ Restaurants</h3>
-                        <div class="space-y-4">
-                        ${data.restaurants.map(r => `
-                            <div class="bg-gray-800 p-4 rounded-lg flex flex-col justify-between h-full">
-                                <div>
-                                    <div class="flex justify-between items-start">
-                                        <h4 class="font-bold pr-2">${r.name} <span class="text-xs font-light bg-gray-700 px-2 py-1 rounded-full">${r.category}</span></h4>
-                                        <span class="font-semibold text-lg text-blue-400 ml-2 whitespace-nowrap">${r.price}</span>
-                                    </div>
-                                    <p class="text-sm text-gray-400 mt-1">${r.description}</p>
-                                </div>
-                                <a href="${r.link}" target="_blank" rel="noopener noreferrer" class="self-start mt-3 text-sm btn-secondary text-white py-1 px-3 rounded-lg font-semibold">View Details</a>
-                            </div>
-                        `).join('')}
-                        </div>
-                    </div>
-                </div>`;
-        }
-        
-        function renderLiveInfo(data) {
-            const { text, sources } = data;
-            return `
-                <div class="bg-gray-800 p-4 rounded-lg">
-                    <p class="text-gray-300">${text.summary}</p>
-                    <div class="mt-4">
-                        <h4 class="font-bold text-sm mb-2">Sources:</h4>
-                        <div class="flex flex-wrap gap-2">
-                            ${sources.map(s => `<a href="${s.uri}" target="_blank" rel="noopener noreferrer" class="text-xs bg-gray-700 hover:bg-gray-600 text-white py-1 px-3 rounded-full transition-colors">${s.title}</a>`).join('')}
-                             <a href="${text.official_link}" target="_blank" rel="noopener noreferrer" class="text-xs bg-blue-600 hover:bg-blue-500 text-white py-1 px-3 rounded-full transition-colors">Official Tourism Site</a>
-                        </div>
-                    </div>
+                <div class="lumina-logo-tagline">
+                    WEB SOLUTIONS
                 </div>
-            `;
-        }
-        
-        function applyTheme(theme) {
-            document.documentElement.style.setProperty('--primary-color', theme.primaryColor);
-            document.documentElement.style.setProperty('--secondary-color', theme.secondaryColor);
-            const fontId = `google-font-${theme.fontFamily.replace(' ', '')}`;
-            if (!document.getElementById(fontId)) {
-                const link = document.createElement('link');
-                link.id = fontId;
-                link.href = `https://fonts.googleapis.com/css2?family=${theme.fontFamily.replace(' ', '+')}:wght@400;700&display=swap`;
-                link.rel = 'stylesheet';
-                document.head.appendChild(link);
+            </div>
+        </a>
+    </footer>
+
+    <!-- NEW: JavaScript for Particle Animation -->
+    <script>
+        const canvas = document.getElementById('particle-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particlesArray;
+
+        // Particle class
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
             }
-            document.body.style.fontFamily = `'${theme.fontFamily}', sans-serif`;
-        }
-        
-        function resetToDashboard() {
-            dom.resultsScreen.style.display = 'none';
-            dom.dashboardScreen.style.display = 'block';
-        }
-
-        dom.cancelShareBtn.addEventListener('click', () => {
-            dom.shareModal.style.display = 'none';
-            dom.shareFeedback.textContent = '';
-            dom.shareEmailInput.value = '';
-        });
-
-        dom.shareForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = dom.shareEmailInput.value.trim();
-            if (!email || !currentTripIdToShare) return;
-
-            dom.shareFeedback.textContent = 'Sharing...';
-            dom.shareFeedback.className = 'text-sm h-4 mt-2 text-yellow-400';
-
-            try {
-                // Find user by email
-                const usersRef = collection(db, "users");
-                const q = query(usersRef, where("email", "==", email));
-                const querySnapshot = await getDocs(q);
-                
-                if (querySnapshot.empty) {
-                    throw new Error("User not found.");
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) {
+                    this.directionX = -this.directionX;
                 }
-
-                const userToShareWith = querySnapshot.docs[0];
-                const userIdToShare = userToShareWith.id;
-
-                // Update the trip document
-                const tripRef = doc(db, "trips", currentTripIdToShare);
-                await updateDoc(tripRef, {
-                    sharedWith: arrayUnion(userIdToShare)
-                });
-                
-                dom.shareFeedback.className = 'text-sm h-4 mt-2 text-green-400';
-                dom.shareFeedback.textContent = 'Trip shared successfully!';
-                setTimeout(() => dom.cancelShareBtn.click(), 2000);
-
-            } catch (error) {
-                 dom.shareFeedback.className = 'text-sm h-4 mt-2 text-red-400';
-                 dom.shareFeedback.textContent = error.message;
+                if (this.y > canvas.height || this.y < 0) {
+                    this.directionY = -this.directionY;
+                }
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
             }
-        });
+        }
 
+        // Create particle array
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 0.5;
+                let x = (Math.random() * ((canvas.width - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((canvas.height - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 0.4) - 0.2;
+                let directionY = (Math.random() * 0.4) - 0.2;
+                let color = 'rgba(0, 123, 255, 0.5)'; // Accent color
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+        }
+
+        init();
+        animate();
+
+        // Resize event
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init();
+        });
     </script>
 
 </body>
 </html>
-
